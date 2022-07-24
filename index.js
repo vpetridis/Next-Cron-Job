@@ -1,5 +1,24 @@
-// get from the stdin only the given time
-const stdin = process.argv[2];
+import fs from "fs/promises";
+
+const stdin = process.argv[3];
+const location = process.argv[2];
+let bins;
+
+function setBins(bin = "") {
+//   console.log("bin:", bin);
+  const splitLines = (str) => str.split(/\r?\n/);
+  bins = splitLines(bin);
+}
+async function catFromFile() {
+  try {
+    const data = await fs.readFile(location, { encoding: "utf8" });
+    setBins(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+await catFromFile();
 
 // utility for functional programming
 const compose =
@@ -90,17 +109,17 @@ const getNextCron = (stdin, cronConfig) => {
 };
 
 // some examples
-const fakeDataHourly = "45 * /bin/run_me_hourly";
+/* const fakeDataHourly = "45 * /bin/run_me_hourly";
 const fakeDataDaily = "30 1 /bin/run_me_daily";
 const fakeEveryMinuteSingleHour = "* 19 /bin/run_me_sixty_times";
-const fakeEveryMinute = "* * /bin/run_me_every_minute";
+const fakeEveryMinute = "* * /bin/run_me_every_minute"; */
 
-console.log(getNextCron(stdin, fakeDataDaily));
+bins.forEach((bin) => console.log(getNextCron(stdin, bin)));
 
-console.log(getNextCron(stdin, fakeDataHourly));
+// console.log(getNextCron(stdin, fakeDataHourly));
 
-console.log(getNextCron(stdin, fakeEveryMinuteSingleHour));
-console.log(getNextCron(stdin, fakeEveryMinute));
+// console.log(getNextCron(stdin, fakeEveryMinuteSingleHour));
+// console.log(getNextCron(stdin, fakeEveryMinute));
 
 export {
   parseEvery,
