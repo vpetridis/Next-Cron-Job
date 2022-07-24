@@ -2,3 +2,4 @@
 30 1 /bin/run_me_daily
 * 19 /bin/run_me_sixty_times
 * * /bin/run_me_every_minute
+01 * /bin/run_me_every_minute

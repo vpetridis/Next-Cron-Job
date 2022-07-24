@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "nodemon index.js",
-    "test": "jest --watchAll"
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",

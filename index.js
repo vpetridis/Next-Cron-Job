@@ -2,10 +2,10 @@ import fs from "fs/promises";
 
 const stdin = process.argv[3];
 const location = process.argv[2];
-let bins;
+let bins = [""];
 
 function setBins(bin = "") {
-//   console.log("bin:", bin);
+  bins.pop();
   const splitLines = (str) => str.split(/\r?\n/);
   bins = splitLines(bin);
 }
@@ -13,11 +13,13 @@ async function catFromFile() {
   try {
     const data = await fs.readFile(location, { encoding: "utf8" });
     setBins(data);
+    return data;
   } catch (error) {
     console.error(error);
   }
 }
 
+// ! remove await to `npm run test`
 await catFromFile();
 
 // utility for functional programming
@@ -51,12 +53,13 @@ const getMinutes = ([hours, minutes]) => {
 };
 
 const isToday = (stdin, cron) => {
-  //calculate minutes from current time to cron job
+  //calculate minutes from current time until cron job
   const minutes =
     getMinutes(parseInput(cron).reverse()) - getMinutes(parseInput(stdin).reverse());
-  // is remainder is negative this means cron job is  scheduled for tomorrow
+  // if difference is negative this means cron job is  scheduled for tomorrow
   return minutes >= 0 ? true : false;
 };
+
 const getStdinTime = (stdin) => {
   const inputTime = parseInput(stdin);
   const hour = inputTime[1];
@@ -70,24 +73,29 @@ const getCronTime = (cronConfig) => {
   return [configHour, configMinute];
 };
 
+const createResult = (stdin, hour, minute, cronConfig) => {
+  const day = isToday(stdin, `${hour}:${minute}`);
+
+  // normalize minutes
+  if (minute < 10) minute = `0${minute}`;
+
+  return `${hour}:${minute} ${day ? "today" : "tomorrow"} ${cronConfig.split(" ")[2]}`;
+};
+
 const getNextCron = (stdin, cronConfig) => {
   const [hour, minute] = getStdinTime(stdin);
   const [cronHour, cronMinute] = getCronTime(cronConfig);
 
   let nextHour, nextMinute;
-  let result;
 
   // case for: '* *'
   if (isEvery(cronHour) && isEvery(cronMinute)) {
-    const day = isToday(stdin, `${hour}:${minute}`);
     nextHour = hour;
     nextMinute = minute;
     // all other cases
-    result = `${nextHour}:${nextMinute} ${day ? "today" : "tomorrow"} ${
-      cronConfig.split(" ")[2]
-    }`;
-    return result;
+    return createResult(stdin, nextHour, nextMinute, cronConfig);
   }
+
   // case for: '12, * '
   isEvery(cronHour) ? (nextHour = hour) : (nextHour = cronHour);
 
@@ -95,17 +103,13 @@ const getNextCron = (stdin, cronConfig) => {
     if (hour === cronHour) {
       nextMinute = minute;
     } else {
-      nextMinute = "00";
+      nextMinute = "0";
     }
   } else {
     nextMinute = cronMinute;
   }
-  const day = isToday(stdin, `${nextHour}:${nextMinute}`);
   // all other cases
-  result = `${nextHour}:${nextMinute} ${day ? "today" : "tomorrow"} ${
-    cronConfig.split(" ")[2]
-  }`;
-  return result;
+  return createResult(stdin, nextHour, nextMinute, cronConfig);
 };
 
 // some examples
@@ -113,13 +117,12 @@ const getNextCron = (stdin, cronConfig) => {
 const fakeDataDaily = "30 1 /bin/run_me_daily";
 const fakeEveryMinuteSingleHour = "* 19 /bin/run_me_sixty_times";
 const fakeEveryMinute = "* * /bin/run_me_every_minute"; */
-
-bins.forEach((bin) => console.log(getNextCron(stdin, bin)));
-
 // console.log(getNextCron(stdin, fakeDataHourly));
-
 // console.log(getNextCron(stdin, fakeEveryMinuteSingleHour));
 // console.log(getNextCron(stdin, fakeEveryMinute));
+
+bins.forEach((bin) => getNextCron(stdin, bin));
+bins.forEach((bin) => console.log(getNextCron(stdin, bin)));
 
 export {
   parseEvery,
