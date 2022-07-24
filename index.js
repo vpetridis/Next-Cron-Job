@@ -7,7 +7,6 @@ const compose =
   (x) =>
     fns.reduceRight((res, fn) => fn(res), x);
 
-
 // Parsers for corn job & user input
 
 const isEvery = (str = "") => str.toString().includes("*");
@@ -54,45 +53,54 @@ const getCronTime = (cronConfig) => {
 
 const getNextCron = (stdin, cronConfig) => {
   const [hour, minute] = getStdinTime(stdin);
-  const [configHour, configMinute] = getCronTime(cronConfig);
+  const [cronHour, cronMinute] = getCronTime(cronConfig);
 
   let nextHour, nextMinute;
   let result;
 
   // case for: '* *'
-  if (isEvery(configHour) && isEvery(configMinute)) {
-    result = `${hour}:${minute} ${cronConfig.split(" ")[2]}`;
+  if (isEvery(cronHour) && isEvery(cronMinute)) {
+    const day = isToday(stdin, `${hour}:${minute}`);
+    nextHour = hour;
+    nextMinute = minute;
+    // all other cases
+    result = `${nextHour}:${nextMinute} ${day ? "today" : "tomorrow"} ${
+      cronConfig.split(" ")[2]
+    }`;
     return result;
   }
   // case for: '12, * '
-  isEvery(configHour) ? (nextHour = hour) : (nextHour = configHour);
+  isEvery(cronHour) ? (nextHour = hour) : (nextHour = cronHour);
 
-  if (isEvery(configMinute)) {
-    if (hour === configHour) {
+  if (isEvery(cronMinute)) {
+    if (hour === cronHour) {
       nextMinute = minute;
     } else {
       nextMinute = "00";
     }
   } else {
-    nextMinute = configMinute;
+    nextMinute = cronMinute;
   }
-  const day = isToday();
+  const day = isToday(stdin, `${nextHour}:${nextMinute}`);
   // all other cases
-  result = `${nextHour}:${nextMinute} ${cronConfig.split(" ")[2]}`;
+  result = `${nextHour}:${nextMinute} ${day ? "today" : "tomorrow"} ${
+    cronConfig.split(" ")[2]
+  }`;
   return result;
 };
 
+// some examples
 const fakeDataHourly = "45 * /bin/run_me_hourly";
 const fakeDataDaily = "30 1 /bin/run_me_daily";
 const fakeEveryMinuteSingleHour = "* 19 /bin/run_me_sixty_times";
 const fakeEveryMinute = "* * /bin/run_me_every_minute";
 
-getNextCron(stdin, fakeDataDaily);
+console.log(getNextCron(stdin, fakeDataDaily));
 
-getNextCron(stdin, fakeDataHourly);
+console.log(getNextCron(stdin, fakeDataHourly));
 
-getNextCron(stdin, fakeEveryMinuteSingleHour);
-getNextCron(stdin, fakeEveryMinute);
+console.log(getNextCron(stdin, fakeEveryMinuteSingleHour));
+console.log(getNextCron(stdin, fakeEveryMinute));
 
 export {
   parseEvery,

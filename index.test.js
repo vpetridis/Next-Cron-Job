@@ -50,6 +50,10 @@ describe("Test against all minutes in a day", () => {
       if (!results.includes(getNextCron(currentTime, everyDay)))
         results.push(getNextCron(currentTime, everyDay));
     });
+    /* Removing last item from results
+    because 1:30 appears two times for today & tomorrow */
+    
+    results.pop();
     expect(results).toHaveLength(1);
   });
 
@@ -71,7 +75,7 @@ describe("Custom cases from specs", () => {
     const currentTime = "16:10";
     const everyDay = "30 1 /bin/run_me_daily";
 
-    expect(getNextCron(currentTime, everyDay)).toEqual("1:30 /bin/run_me_daily");
+    expect(getNextCron(currentTime, everyDay)).toEqual("1:30 tomorrow /bin/run_me_daily");
   });
 
   it("should return correct every minute cron job", () => {
@@ -79,7 +83,7 @@ describe("Custom cases from specs", () => {
     const everyMinute = "* * /bin/run_me_every_minute";
 
     expect(getNextCron(currentTime, everyMinute)).toEqual(
-      "16:10 /bin/run_me_every_minute"
+      "16:10 today /bin/run_me_every_minute"
     );
   });
 
@@ -87,7 +91,7 @@ describe("Custom cases from specs", () => {
     const currentTime = "16:10";
     const everyHour = "45 * /bin/run_me_hourly";
 
-    expect(getNextCron(currentTime, everyHour)).toEqual("16:45 /bin/run_me_hourly");
+    expect(getNextCron(currentTime, everyHour)).toEqual("16:45 today /bin/run_me_hourly");
   });
 
   it("should return correct every minute in an hour cron job", () => {
@@ -95,7 +99,7 @@ describe("Custom cases from specs", () => {
     const everyMinuteSingleHour = "* 19 /bin/run_me_sixty_times";
 
     expect(getNextCron(currentTime, everyMinuteSingleHour)).toEqual(
-      "19:00 /bin/run_me_sixty_times"
+      "19:00 today /bin/run_me_sixty_times"
     );
   });
 });
